@@ -6,8 +6,7 @@
 - Medium: `Deposited` event arguments emitted in wrong order
 - Low: Missing explicit “already withdrawn” guard (second call currently reverts via arithmetic underflow)
 - Informational: `calculateReward` visibility should be `internal`
-- Informational: Integer truncation to 0 for sub-wei rewards is by design
-- Not an issue: Per-user `depositId` reuse (e.g., both users have id 0); cross-user withdrawal not possible; reentrancy out of scope with trusted ERC20
+
 
 
 ## Details
