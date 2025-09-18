@@ -43,22 +43,25 @@ contract TimeLockSavings {
         token = IERC20(_token);
         owner = msg.sender;
     }
-
+    
     function deposit(uint256 _amount) external {
         require(_amount > 0, "Amount must be greater than 0");
         require(token.transferFrom(msg.sender, address(this), _amount), "Transfer failed");
 
+        // @audit-info 🟡 No id is added for the deposit
         userDeposits[msg.sender].push(Deposit({amount: _amount, depositTime: block.timestamp, withdrawn: false}));
 
         totalDeposited[msg.sender] += _amount;
-        totalLocked += _amount;
+        totalLocked += _amount; // @audit-info no id is returned for the deposit
 
-        emit Deposited(msg.sender, userDeposits[msg.sender].length - 1, _amount);
+        emit Deposited(msg.sender, userDeposits[msg.sender].length - 1, _amount); //@audit-info deposit events arguments are swapped 
     }
 
-    function withdraw(uint256 _depositId) external {
-        require(_depositId < userDeposits[msg.sender].length, "Invalid deposit ID");
+    function withdraw(uint256 _depositId) external { //@ audit-info 🟡 Anyone can withdraw tokens
+        require(_depositId < userDeposits[msg.sender].length, "Invalid deposit ID"); //@ audit-info No check to check if the user is indeed the owner of the deposit ID.
         Deposit storage userDeposit = userDeposits[msg.sender][_depositId];
+        // @audit-info 🟡 No check to check if the user is indeed the owner of the deposit ID.
+        // @audit-info 🟡 No check to check if the deposit is already withdrawn.
         require(userDeposit.amount > 0, "No deposit found");
 
         uint256 timeElapsed = block.timestamp - userDeposit.depositTime;
@@ -77,7 +80,7 @@ contract TimeLockSavings {
             emit EarlyWithdrawn(msg.sender, withdrawAmount, penalty, _depositId);
         } else {
             // Normal withdrawal with rewards
-            uint256 reward = calculateReward(timeElapsed, amount);
+            uint256 reward = calculateReward(timeElapsed, amount);  // @audit-info - parameter passed the wrong way, which might lead to errors in calculation
             uint256 totalAmount = amount + reward;
 
             userDeposit.withdrawn = true;
@@ -90,6 +93,9 @@ contract TimeLockSavings {
         }
     }
 
+
+
+    // @audit-info  Informational, this should be internal function
     function calculateReward(uint256 _amount, uint256 _timeElapsed) public pure returns (uint256) {
         if (_timeElapsed < MIN_LOCK_PERIOD) {
             return 0;
@@ -105,7 +111,7 @@ contract TimeLockSavings {
             reward += bonusReward;
         }
 
-        return reward;
+        return reward; // @audit-info - this return uint256, what if  the reward of the user is 0.001?, can a reward ever be 0.00?
     }
 
     function getUserDeposits(address _user) external view returns (Deposit[] memory) {
