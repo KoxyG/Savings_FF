@@ -12,36 +12,6 @@
   - `test/SavingsTest.t.sol`
 - **Environment**: Foundry, Solidity 0.8.x, custom `MockERC20` for tests.
 
-## Out of Scope
-- Token economics beyond constants configured in the contract
-- Integration/security of external ERC20 tokens used with the contract
-- UI, deployment scripts, monitoring infrastructure
-
-## Methodology
-- Manual code review of `TimeLockSavings` for logic, math, and access control flaws
-- Differential reasoning based on business rules (time-locked deposits, penalty/reward mechanics)
-- PoC validation via existing test `testWithdrawalParameterOrderBug` in Foundry
-- Threat modeling for state integrity, payout correctness, and event correctness
-
-## System Overview
-- Users deposit ERC20 tokens into `TimeLockSavings`, locking funds for at least `MIN_LOCK_PERIOD`
-- Early withdrawals incur a `EARLY_PENALTY_RATE`
-- Normal withdrawals (after `MIN_LOCK_PERIOD`) earn base and incremental rewards based on elapsed time
-- Contract tracks `totalLocked`, `totalRewardsPaid`, and per-user deposits
-- Owner can `emergencyWithdraw` full balance and `updateOwner`
-
-## Roles and Permissions
-- **User**: deposit, withdraw their own deposits
-- **Owner**: `emergencyWithdraw`, `updateOwner`
-- No other privileged roles
-
-## Constants and Parameters
-- `MIN_LOCK_PERIOD = 60 days`
-- `BONUS_PERIOD = 30 days`
-- `BASE_REWARD_RATE = 200` (2% in basis points)
-- `BONUS_REWARD_RATE = 100` (1% per bonus period)
-- `EARLY_PENALTY_RATE = 1000` (10%)
-- `BASIS_POINTS = 10000`
 
 ## Findings Summary
 - **High**: Incorrect parameter order in reward calculation during withdraw
